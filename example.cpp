@@ -76,13 +76,6 @@ namespace mongo {
                 static const string n = "exampleplugin";
                 return n;
             }
-            virtual void help(stringstream &h) const {
-                h << "Here is some help text for the example plugin." << endl
-                  << "It provides the following commands: " << endl;
-                for (vector<shared_ptr<Command> >::const_iterator it = _loadedCommands.begin(); it != _loadedCommands.end(); ++it) {
-                    h << (*it)->name << endl;
-                }
-            }
             virtual bool load(string &errmsg, BSONObjBuilder &result) {
                 BSONArrayBuilder b(result.subarrayStart("newCommands"));
                 shared_ptr<Command> cmd(new ExampleCommand);
