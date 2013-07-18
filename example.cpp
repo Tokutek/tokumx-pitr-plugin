@@ -69,7 +69,7 @@ namespace mongo {
             }
         };
 
-        class ExampleInterface : public plugin::PluginInterface {
+        class ExampleInterface : public plugins::PluginInterface {
             vector<shared_ptr<Command> > _loadedCommands;
           public:
             virtual const string &name() const {
@@ -110,7 +110,7 @@ namespace mongo {
 extern "C" {
 
     __attribute__((visibility("default")))
-    mongo::plugin::PluginInterface *getInterface(void) {
+    mongo::plugins::PluginInterface *getInterface(void) {
         return &mongo::example::exampleInterface;
     }
 
