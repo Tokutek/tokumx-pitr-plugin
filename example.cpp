@@ -23,8 +23,7 @@
 #include "mongo/db/client.h"
 #include "mongo/db/commands.h"
 #include "mongo/db/namespace_details.h"
-#include "mongo/plugins/plugins.h"
-#include "mongo/util/log.h"
+#include "mongo/plugins/command_loader.h"
 
 namespace mongo {
 
@@ -51,48 +50,17 @@ namespace mongo {
             }
         };
 
-        /*
-         * One of the world's ugliest hacks.
-         */
-        class CommandRemover : private Command {
-          public:
-            static bool remove(const string &thename) {
-                if (_commands == NULL) {
-                    return false;
-                }
-                map<string, Command *>::iterator it = _commands->find(thename);
-                if (it == _commands->end()) {
-                    return false;
-                }
-                _commands->erase(it);
-                return true;
+        class ExampleInterface : public plugins::CommandLoader {
+          protected:
+            CommandVector commands() const {
+                CommandVector cmds;
+                cmds.push_back(boost::make_shared<ExampleCommand>());
+                return cmds;
             }
-        };
-
-        class ExampleInterface : public plugins::PluginInterface {
-            vector<shared_ptr<Command> > _loadedCommands;
           public:
-            virtual const string &name() const {
+            const string &name() const {
                 static const string n = "exampleplugin";
                 return n;
-            }
-            virtual bool load(string &errmsg, BSONObjBuilder &result) {
-                BSONArrayBuilder b(result.subarrayStart("newCommands"));
-                shared_ptr<Command> cmd(new ExampleCommand);
-                _loadedCommands.push_back(cmd);
-                b.append(cmd->name);
-                b.doneFast();
-                return true;
-            }
-            virtual void unload(string &errmsg) {
-                while (!_loadedCommands.empty()) {
-                    shared_ptr<Command> cmd = _loadedCommands.back();
-                    _loadedCommands.pop_back();
-                    bool ok = CommandRemover::remove(cmd->name);
-                    if (!ok) {
-                        errmsg += "couldn't find command " + cmd->name;
-                    }
-                }
             }
         } exampleInterface;
 
