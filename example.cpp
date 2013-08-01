@@ -62,6 +62,10 @@ namespace mongo {
                 static const string n = "exampleplugin";
                 return n;
             }
+            const string &version() const {
+                static const string v = "0.0.1-pre-";
+                return v;
+            }
         } exampleInterface;
 
     }
@@ -71,7 +75,7 @@ namespace mongo {
 extern "C" {
 
     __attribute__((visibility("default")))
-    mongo::plugins::PluginInterface *getInterface(void) {
+    mongo::plugins::PluginInterface *TokuMX_Plugin__getInterface(void) {
         return &mongo::example::exampleInterface;
     }
 
