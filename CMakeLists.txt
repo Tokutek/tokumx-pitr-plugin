@@ -2,7 +2,7 @@ add_library(exampleplugin SHARED
   example
   )
 
-install(TARGETS backup_plugin
+install(TARGETS exampleplugin
   DESTINATION ${INSTALL_LIBDIR}/plugins
   COMPONENT tokumx_plugins
   )

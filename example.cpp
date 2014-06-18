@@ -22,7 +22,6 @@
 
 #include "mongo/db/client.h"
 #include "mongo/db/commands.h"
-#include "mongo/db/namespace_details.h"
 #include "mongo/plugins/command_loader.h"
 
 namespace mongo {
@@ -33,19 +32,14 @@ namespace mongo {
           public:
             ExampleCommand() : QueryCommand("pluginExample") {}
             virtual void help(stringstream &h) const {
-                h << "reports the number of indexes for a collection" << endl
-                  << "{ 'pluginExample': <collname> }";
+                h << "says hello world" << endl
+                  << "{ 'pluginExample': 1 }";
             }
+	  virtual void addRequiredPrivileges(const std::string& dbname,
+					     const BSONObj& cmdObj,
+					     std::vector<Privilege>* out) {}
             virtual bool run(const string &db, BSONObj &cmdObj, int options, string &errmsg, BSONObjBuilder &result, bool fromRepl) {
-                BSONElement e = cmdObj.firstElement();
-                string ns = db + "." + e.str();
-                NamespaceDetails *d = nsdetails(ns);
-                if (d == NULL) {
-                    errmsg = "ns not found";
-                    return false;
-                }
-                result.append("ns", ns);
-                result.append("indexes", d->nIndexes());
+                result.append("hello", "world");
                 return true;
             }
         };
