@@ -1,8 +1,8 @@
-add_library(exampleplugin SHARED
-  example
+add_library(point_in_time_recovery SHARED
+  pir
   )
 
-install(TARGETS exampleplugin
+install(TARGETS point_in_time_recovery
   DESTINATION ${INSTALL_LIBDIR}/plugins
   COMPONENT tokumx_plugins
   )
