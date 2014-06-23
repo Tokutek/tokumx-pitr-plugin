@@ -1,4 +1,4 @@
-// @file pir.cpp
+// @file pitr.cpp
 
 /**
 *    Copyright (C) 2013 Tokutek Inc.
@@ -28,24 +28,9 @@
 
 namespace mongo {
 
-    namespace pir {
+    namespace pitr {
 
-        class CmdPlayOplogTo: public ReplSetCommand {
-        public:
-            virtual bool canRunInMultiStmtTxn() const { return false; }
-            virtual void help( stringstream &help ) const {
-                // TODO: add more here
-                help << "trim oplog and oplog.refs collections\n" <<
-                    "Either pass {ts : Date} or {GTID : gtid}";
-            }
-            virtual void addRequiredPrivileges(const std::string& dbname,
-                                               const BSONObj& cmdObj,
-                                               std::vector<Privilege>* out) {
-                ActionSet actions;
-                actions.addAction(ActionType::replTrimOplog);
-                out->push_back(Privilege(AuthorizationManager::SERVER_RESOURCE_NAME, actions));
-            }
-        
+        class CmdRecoverToPoint : public ReplSetCommand {
             void applyOperation(BSONObj curr, OplogReader& r) {
                 GTID currEntry = getGTIDFromOplogEntry(curr);
                 uint64_t ts = curr["ts"]._numberLong();
@@ -75,7 +60,22 @@ namespace mongo {
                 return true;
             }
         
-            CmdPlayOplogTo() : ReplSetCommand("playOplogTo") { }
+        public:
+            virtual bool canRunInMultiStmtTxn() const { return false; }
+            virtual void help( stringstream &help ) const {
+                help << "runs point-in-time recovery by syncing and applying oplog entries\n"
+                     << "and stopping at the specified operation (identified by ts or gtid).\n"
+                     << "Example: { " << name << " : 1, ts : <Date> } or { " << name << " : 1, gtid : <GTID> }";
+            }
+            virtual void addRequiredPrivileges(const std::string& dbname,
+                                               const BSONObj& cmdObj,
+                                               std::vector<Privilege>* out) {
+                ActionSet actions;
+                actions.addAction(ActionType::replTrimOplog);
+                out->push_back(Privilege(AuthorizationManager::SERVER_RESOURCE_NAME, actions));
+            }
+        
+            CmdRecoverToPoint() : ReplSetCommand("recoverToPoint") { }
         
             // This command is not meant to be run in a concurrent manner. Assumes user is running this in
             // a controlled setting.
@@ -84,14 +84,11 @@ namespace mongo {
                 BSONElement gtide = cmdObj["gtid"];
                 GTID maxGTID;
                 uint64_t maxTS = 0;
-                if (tse.ok() && gtide.ok()) {
-                    errmsg = "Can supply either gtid or ts, but not both";
+                if (tse.ok() != gtide.ok()) {
+                    errmsg = "Must supply either gtid or ts, but not both";
                     return false;
                 }
-                if (!tse.ok() && !gtide.ok()) {
-                    errmsg = "Must supply either ts or gtid as parameter for trimming";
-                    return false;
-                }
+
                 if (tse.ok()) {
                     if (tse.type() != mongo::Date) {
                         errmsg = "Must supply a date for the ts field";
@@ -111,7 +108,7 @@ namespace mongo {
                 // check we are in maintenance mode
                 //
                 if (!(theReplSet->state().recovering() && theReplSet->inMaintenanceMode())) {
-                    errmsg = "Must be in recovering state (maintenance mode) to run playOplogTo";
+                    errmsg = "Must be in recovering state (maintenance mode) to run recoverToPoint";
                     return false;
                 }
         
@@ -162,7 +159,7 @@ namespace mongo {
                         while (r.more()) {
                             killCurrentOp.checkForInterrupt();
         
-                            BSONObj curr = r.nextSafe().getOwned();
+                            BSONObj curr = r.nextSafe();
                             if (oplogEntryShouldBeApplied(curr, maxGTID, maxTS)) {
                                 applyOperation(curr, r);
                             }
@@ -187,29 +184,29 @@ namespace mongo {
             }
         };
 
-        class PirInterface : public plugins::CommandLoader {
+        class PitrInterface : public plugins::CommandLoader {
           protected:
             CommandVector commands() const {
                 CommandVector cmds;
-                cmds.push_back(boost::make_shared<CmdPlayOplogTo>());
+                cmds.push_back(boost::make_shared<CmdRecoverToPoint>());
                 return cmds;
             }
           public:
             const string &name() const {
-                static const string n = "point_in_time_recovery";
+                static const string n = "pitr_plugin";
                 return n;
             }
             const string &version() const {
                 static const string v = "0.0.1-pre-";
                 return v;
             }
-        } pirInterface;
+        } pitrInterface;
     }
 } // namespace mongo
 
 extern "C" {
     __attribute__((visibility("default")))
     mongo::plugins::PluginInterface *TokuMX_Plugin__getInterface(void) {
-        return &mongo::pir::pirInterface;
+        return &mongo::pitr::pitrInterface;
     }
 }

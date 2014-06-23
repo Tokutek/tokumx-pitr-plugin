@@ -1,8 +1,8 @@
-add_library(point_in_time_recovery SHARED
-  pir
+add_library(pitr_plugin SHARED
+  pitr
   )
 
-install(TARGETS point_in_time_recovery
+install(TARGETS pitr_plugin
   DESTINATION ${INSTALL_LIBDIR}/plugins
   COMPONENT tokumx_plugins
   )
