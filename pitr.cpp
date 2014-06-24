@@ -84,7 +84,7 @@ namespace mongo {
                 BSONElement gtide = cmdObj["gtid"];
                 GTID maxGTID;
                 uint64_t maxTS = 0;
-                if (tse.ok() != gtide.ok()) {
+                if (tse.ok() == gtide.ok()) {
                     errmsg = "Must supply either gtid or ts, but not both";
                     return false;
                 }
