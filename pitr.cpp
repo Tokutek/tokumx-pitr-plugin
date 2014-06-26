@@ -71,7 +71,7 @@ namespace mongo {
                                                const BSONObj& cmdObj,
                                                std::vector<Privilege>* out) {
                 ActionSet actions;
-                actions.addAction(ActionType::replTrimOplog);
+                actions.addAction(ActionType::recoverToPoint);
                 out->push_back(Privilege(AuthorizationManager::SERVER_RESOURCE_NAME, actions));
             }
         
