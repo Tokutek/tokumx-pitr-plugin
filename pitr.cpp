@@ -44,7 +44,7 @@ namespace mongo {
                 }
                 theReplSet->gtidManager->noteGTIDAdded(currEntry, ts, lastHash);
                 theReplSet->gtidManager->noteApplyingGTID(currEntry);
-                applyTransactionFromOplog(curr);
+                applyTransactionFromOplog(curr, NULL);
                 theReplSet->gtidManager->noteGTIDApplied(currEntry);
             }
         
