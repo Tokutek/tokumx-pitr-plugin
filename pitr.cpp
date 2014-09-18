@@ -44,7 +44,7 @@ namespace mongo {
                 }
                 theReplSet->gtidManager->noteGTIDAdded(currEntry, ts, lastHash);
                 theReplSet->gtidManager->noteApplyingGTID(currEntry);
-                applyTransactionFromOplog(curr, NULL);
+                applyTransactionFromOplog(curr, NULL, false);
                 theReplSet->gtidManager->noteGTIDApplied(currEntry);
             }
         
@@ -119,7 +119,7 @@ namespace mongo {
                         const Member *source = NULL;
                         OplogReader r(false); // false, because we don't want to be contributing to write concern
                         string sourceHostname;
-                        source = theReplSet->getMemberToSyncTo();
+                        source = theReplSet->getMemberToSyncTo(false);
                         if (!source) {
                             log() << "could not get a member to sync from, sleeping 2 seconds" << endl;
                             sleepsecs(2);
