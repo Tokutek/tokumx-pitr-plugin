@@ -197,7 +197,7 @@ namespace mongo {
                 return n;
             }
             const string &version() const {
-                static const string v = "0.0.1-pre-";
+                static const string v = "1.0.0";
                 return v;
             }
         } pitrInterface;
